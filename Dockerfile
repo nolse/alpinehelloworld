@@ -5,7 +5,7 @@ FROM alpine:latest
 RUN apk add --no-cache --update python3 py3-pip bash
 ADD ./webapp/requirements.txt /tmp/requirements.txt
 
-# Install dependencies with --break-system-packages flag
+# Install dependencies with --break-system-packages
 RUN pip3 install --no-cache-dir --break-system-packages -q -r /tmp/requirements.txt
 
 # Add our code
@@ -16,6 +16,5 @@ WORKDIR /opt/webapp
 RUN adduser -D myuser
 USER myuser
 
-# Run the app. CMD is required to run on Heroku
-# $PORT is set by Heroku
+# Run the app
 CMD gunicorn --bind 0.0.0.0:$PORT wsgi
