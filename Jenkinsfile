@@ -14,7 +14,7 @@ pipeline { // AUTOMATISATION
             agent any
             steps {
                 script {
-                    sh 'docker build -t eazytraining/${IMAGE_NAME}:${IMAGE_TAG} .'
+                    sh 'docker build -t nolse/${IMAGE_NAME}:${IMAGE_TAG} .'
                 }
             }
         }
@@ -24,7 +24,7 @@ pipeline { // AUTOMATISATION
             steps {
                 script {
                     sh '''
-                        docker build -t eazytraining/${IMAGE_NAME}:${IMAGE_TAG} .
+                        docker build -t nolse/${IMAGE_NAME}:${IMAGE_TAG} .
                         sleep 5
                     '''
                 }
