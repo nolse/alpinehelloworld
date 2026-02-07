@@ -8,6 +8,7 @@ pipeline { // AUTOMATISATION
         STAGING    = "eazytraining-staging-alpha"
         PRODUCTION = "eazytraining-prod-alpha"
     }
+
     stages { // DEVELOPPEMENT
 
         stage('Build image') {
@@ -15,9 +16,9 @@ pipeline { // AUTOMATISATION
             steps {
                 script {
                     sh '''
-                    docker build -t alphabalde/${IMAGE_NAME}:${IMAGE_TAG} .
-                    docker ps
-                    sleep 5
+                        docker build -t alphabalde/${IMAGE_NAME}:${IMAGE_TAG} .
+                        docker ps
+                        sleep 5
                     '''
                 }
             }
@@ -59,7 +60,12 @@ pipeline { // AUTOMATISATION
         }
 
         stage('Push image in staging and deploy it') {
-            agent any
+            agent {
+                docker {
+                    image 'heroku/heroku:22'
+                    args '-v /var/run/docker.sock:/var/run/docker.sock'
+                }
+            }
             when {
                 expression { GIT_BRANCH == 'origin/master' }
             }
@@ -67,19 +73,22 @@ pipeline { // AUTOMATISATION
                 HEROKU_API_KEY = credentials('HEROKU_API_KEY')
             }
             steps {
-                script {
-                    sh '''
-                        heroku container:login
-                        heroku create $STAGING || echo "project already exist"
-                        heroku container:push -a $STAGING web
-                        heroku container:release -a $STAGING web
-                    '''
-                }
+                sh '''
+                    heroku container:login
+                    heroku create $STAGING || echo "project already exist"
+                    heroku container:push -a $STAGING web
+                    heroku container:release -a $STAGING web
+                '''
             }
         }
 
         stage('Push image in prod and deploy it') {
-            agent any
+            agent {
+                docker {
+                    image 'heroku/heroku:22'
+                    args '-v /var/run/docker.sock:/var/run/docker.sock'
+                }
+            }
             when {
                 expression { GIT_BRANCH == 'origin/master' }
             }
@@ -87,14 +96,12 @@ pipeline { // AUTOMATISATION
                 HEROKU_API_KEY = credentials('HEROKU_API_KEY')
             }
             steps {
-                script {
-                    sh '''
-                        heroku container:login
-                        heroku create $PRODUCTION || echo "project already exist"
-                        heroku container:push -a $PRODUCTION web
-                        heroku container:release -a $PRODUCTION web
-                    '''
-                }
+                sh '''
+                    heroku container:login
+                    heroku create $PRODUCTION || echo "project already exist"
+                    heroku container:push -a $PRODUCTION web
+                    heroku container:release -a $PRODUCTION web
+                '''
             }
         }
     }
