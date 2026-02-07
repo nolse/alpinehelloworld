@@ -20,7 +20,7 @@ pipeline { // AUTOMATISATION
             }
         }
 
-        stage('Run container based on builded image') {
+        stage('Run container based on built image') {
             agent any
             steps {
                 sh '''
@@ -52,52 +52,53 @@ pipeline { // AUTOMATISATION
             }
         }
 
-        stage ('Push image in staging and deploy it') {
+        stage('Push image to staging and deploy') {
             agent any
             when {
-                expression { GIT_BRANCH == 'origin/master' }
+                expression { env.GIT_BRANCH == 'origin/master' }
             }
             environment {
                 HEROKU_API_KEY = credentials('HEROKU_API_KEY')
             }
             steps {
                 sh '''
-                    docker run --rm \
-                      -e HEROKU_API_KEY=$HEROKU_API_KEY \
-                      -v /var/run/docker.sock:/var/run/docker.sock \
-                      finalgene/heroku-cli:latest \
-                      bash -c "
-                        sleep 10
-                        heroku login -i
-                        heroku container:login &&
-                        heroku create $STAGING || echo project already exist &&
-                        heroku container:push -a $STAGING web &&
-                        heroku container:release -a $STAGING web
-                      "
+                    # Login Docker to Heroku registry
+                    echo $HEROKU_API_KEY | docker login --username=_ --password-stdin registry.heroku.com
+
+                    # Tag and push image
+                    docker tag alphabalde/${IMAGE_NAME}:${IMAGE_TAG} registry.heroku.com/$STAGING/web
+                    docker push registry.heroku.com/$STAGING/web
+
+                    # Release image via Heroku API
+                    curl -n -X PATCH https://api.heroku.com/apps/$STAGING/formation \
+                        -H "Accept: application/vnd.heroku+json; version=3" \
+                        -H "Authorization: Bearer $HEROKU_API_KEY" \
+                        -H "Content-Type: application/json" \
+                        -d '{"updates":[{"type":"web","docker_image":"registry.heroku.com/'"$STAGING"'/web"}]}'
                 '''
             }
         }
 
-        stage ('Push image in prod and deploy it') {
+        stage('Push image to prod and deploy') {
             agent any
             when {
-                expression { GIT_BRANCH == 'origin/master' }
+                expression { env.GIT_BRANCH == 'origin/master' }
             }
             environment {
                 HEROKU_API_KEY = credentials('HEROKU_API_KEY')
             }
             steps {
                 sh '''
-                    docker run --rm \
-                      -e HEROKU_API_KEY=$HEROKU_API_KEY \
-                      -v /var/run/docker.sock:/var/run/docker.sock \
-                      finalgene/heroku-cli:latest \
-                      bash -c "
-                        heroku container:login &&
-                        heroku create $PRODUCTION || echo project already exist &&
-                        heroku container:push -a $PRODUCTION web &&
-                        heroku container:release -a $PRODUCTION web
-                      "
+                    echo $HEROKU_API_KEY | docker login --username=_ --password-stdin registry.heroku.com
+
+                    docker tag alphabalde/${IMAGE_NAME}:${IMAGE_TAG} registry.heroku.com/$PRODUCTION/web
+                    docker push registry.heroku.com/$PRODUCTION/web
+
+                    curl -n -X PATCH https://api.heroku.com/apps/$PRODUCTION/formation \
+                        -H "Accept: application/vnd.heroku+json; version=3" \
+                        -H "Authorization: Bearer $HEROKU_API_KEY" \
+                        -H "Content-Type: application/json" \
+                        -d '{"updates":[{"type":"web","docker_image":"registry.heroku.com/'"$PRODUCTION"'/web"}]}'
                 '''
             }
         }
