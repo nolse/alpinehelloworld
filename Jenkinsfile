@@ -65,7 +65,7 @@ pipeline { // AUTOMATISATION
                     docker run --rm \
                       -e HEROKU_API_KEY=$HEROKU_API_KEY \
                       -v /var/run/docker.sock:/var/run/docker.sock \
-                      heroku/heroku:22 \
+                      heroku/cli:latest \
                       bash -c "
                         heroku container:login &&
                         heroku create $STAGING || echo project already exist &&
@@ -89,7 +89,7 @@ pipeline { // AUTOMATISATION
                     docker run --rm \
                       -e HEROKU_API_KEY=$HEROKU_API_KEY \
                       -v /var/run/docker.sock:/var/run/docker.sock \
-                      heroku/heroku:22 \
+                      heroku/cli:latest \
                       bash -c "
                         heroku container:login &&
                         heroku create $PRODUCTION || echo project already exist &&
