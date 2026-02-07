@@ -67,10 +67,7 @@ pipeline { // AUTOMATISATION
                       -v /var/run/docker.sock:/var/run/docker.sock \
                       finalgene/heroku-cli:latest \
                       bash -c "
-
-                        # Installer Heroku CLI une seule fois dans le conteneur Jenkins
-                        curl https://cli-assets.heroku.com/install.sh | sh
-                        sleep 30
+                        sleep 10
                         heroku login -i
                         heroku container:login &&
                         heroku create $STAGING || echo project already exist &&
