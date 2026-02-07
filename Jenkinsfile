@@ -22,7 +22,7 @@ pipeline {
             steps {
                 sh """
                     docker run --name $IMAGE_NAME -d -p 80:5000 -e PORT=5000 alphabalde/${IMAGE_NAME}:${IMAGE_TAG}
-                    sleep 5
+                    sleep 30
                 """
             }
         }
