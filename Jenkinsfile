@@ -52,7 +52,7 @@ pipeline { // AUTOMATISATION
             }
         }
 
-        stage('Push image in staging and deploy it') {
+        stage ('Push image in staging and deploy it') {
             agent any
             when {
                 expression { GIT_BRANCH == 'origin/master' }
@@ -67,6 +67,11 @@ pipeline { // AUTOMATISATION
                       -v /var/run/docker.sock:/var/run/docker.sock \
                       finalgene/heroku-cli:latest \
                       bash -c "
+
+                        # Installer Heroku CLI une seule fois dans le conteneur Jenkins
+                        curl https://cli-assets.heroku.com/install.sh | sh
+                        sleep 30
+                        heroku login -i
                         heroku container:login &&
                         heroku create $STAGING || echo project already exist &&
                         heroku container:push -a $STAGING web &&
@@ -76,7 +81,7 @@ pipeline { // AUTOMATISATION
             }
         }
 
-        stage('Push image in prod and deploy it') {
+        stage ('Push image in prod and deploy it') {
             agent any
             when {
                 expression { GIT_BRANCH == 'origin/master' }
