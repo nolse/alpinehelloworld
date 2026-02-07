@@ -1,4 +1,5 @@
-pipeline { 
+pipeline { // AUTOMATISATION CI/CD
+
     agent none
 
     environment {
@@ -13,87 +14,88 @@ pipeline {
         stage('Build image') {
             agent any
             steps {
-                sh "docker build -t alphabalde/${IMAGE_NAME}:${IMAGE_TAG} ."
+                // Construire l'image Docker à partir du Dockerfile
+                sh '''
+                    docker build -t alphabalde/${IMAGE_NAME}:${IMAGE_TAG} .
+                '''
             }
         }
 
-        stage('Run container locally') {
+        stage('Run container based on built image') {
             agent any
             steps {
-                sh """
-                    docker run --name $IMAGE_NAME -d -p 80:5000 -e PORT=5000 alphabalde/${IMAGE_NAME}:${IMAGE_TAG}
+                // Définir un nom unique pour le conteneur avec le numéro de build
+                // Supprimer tout conteneur existant portant ce nom pour éviter les conflits
+                sh '''
+                    CONTAINER_NAME=${IMAGE_NAME}-${BUILD_NUMBER}
+                    docker rm -f $CONTAINER_NAME || true
+                    docker run --name $CONTAINER_NAME -d \
+                        -p 80:5000 \
+                        -e PORT=5000 \
+                        alphabalde/${IMAGE_NAME}:${IMAGE_TAG}
                     sleep 30
-                """
+                '''
             }
         }
 
         stage('Test image') {
             agent any
             steps {
-                sh 'curl http://172.17.0.1:80 | grep -iq "hello world!"'
+                // Tester que l'application répond bien avec "Hello world!"
+                sh '''
+                    curl http://172.17.0.1:80 | grep -iq "hello world!"
+                '''
             }
         }
 
         stage('Clean container') {
             agent any
             steps {
-                sh "docker stop $IMAGE_NAME || true && docker rm $IMAGE_NAME || true"
+                // Nettoyer le conteneur après le test pour ne pas polluer Docker
+                sh '''
+                    CONTAINER_NAME=${IMAGE_NAME}-${BUILD_NUMBER}
+                    docker stop $CONTAINER_NAME || true
+                    docker rm $CONTAINER_NAME || true
+                '''
             }
         }
 
-        stage('Push image to staging and deploy') {
+        stage('Push image in staging and deploy') {
             agent any
             when {
-                expression { env.GIT_BRANCH == 'origin/master' }
+                expression { GIT_BRANCH == 'origin/master' }
             }
             environment {
                 HEROKU_API_KEY = credentials('HEROKU_API_KEY')
             }
             steps {
-                sh """
-                    # Login Docker to Heroku
-                    echo \$HEROKU_API_KEY | docker login --username=_ --password-stdin registry.heroku.com
-
-                    # Tag and push to Heroku Registry
-                    docker tag alphabalde/\$IMAGE_NAME:\$IMAGE_TAG registry.heroku.com/\$STAGING/web
-                    docker push registry.heroku.com/\$STAGING/web
-
-                    # Release app via Heroku API
-                    curl -n -X PATCH https://api.heroku.com/apps/\$STAGING/formation \
-                        -H "Accept: application/vnd.heroku+json; version=3" \
-                        -H "Authorization: Bearer \$HEROKU_API_KEY" \
-                        -H "Content-Type: application/json" \
-                        -d '{"updates":[{"type":"web","docker_image":"registry.heroku.com/'\$STAGING'/web"}]}'
-                """
+                // Push de l'image sur Heroku staging et déploiement
+                sh '''
+                    docker login --username=_ --password-stdin registry.heroku.com <<< $HEROKU_API_KEY
+                    docker tag alphabalde/${IMAGE_NAME}:${IMAGE_TAG} registry.heroku.com/${STAGING}/web
+                    docker push registry.heroku.com/${STAGING}/web
+                    heroku container:release -a $STAGING web
+                '''
             }
         }
 
-        stage('Push image to prod and deploy') {
+        stage('Push image in prod and deploy') {
             agent any
             when {
-                expression { env.GIT_BRANCH == 'origin/master' }
+                expression { GIT_BRANCH == 'origin/master' }
             }
             environment {
                 HEROKU_API_KEY = credentials('HEROKU_API_KEY')
             }
             steps {
-                sh """
-                    # Login Docker to Heroku
-                    echo \$HEROKU_API_KEY | docker login --username=_ --password-stdin registry.heroku.com
-
-                    # Tag and push to Heroku Registry
-                    docker tag alphabalde/\$IMAGE_NAME:\$IMAGE_TAG registry.heroku.com/\$PRODUCTION/web
-                    docker push registry.heroku.com/\$PRODUCTION/web
-
-                    # Release app via Heroku API
-                    curl -n -X PATCH https://api.heroku.com/apps/\$PRODUCTION/formation \
-                        -H "Accept: application/vnd.heroku+json; version=3" \
-                        -H "Authorization: Bearer \$HEROKU_API_KEY" \
-                        -H "Content-Type: application/json" \
-                        -d '{"updates":[{"type":"web","docker_image":"registry.heroku.com/'\$PRODUCTION'/web"}]}'
-                """
+                // Push de l'image sur Heroku production et déploiement
+                sh '''
+                    docker login --username=_ --password-stdin registry.heroku.com <<< $HEROKU_API_KEY
+                    docker tag alphabalde/${IMAGE_NAME}:${IMAGE_TAG} registry.heroku.com/${PRODUCTION}/web
+                    docker push registry.heroku.com/${PRODUCTION}/web
+                    heroku container:release -a $PRODUCTION web
+                '''
             }
         }
-
     }
 }
