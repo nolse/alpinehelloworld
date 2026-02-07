@@ -1,22 +1,33 @@
-# Grab the latest alpine image
-FROM alpine:latest
+# Utiliser une image Python légère et compatible Heroku
+FROM python:3.11-slim
 
-# Install python, pip, bash, curl, git
-RUN apk add --no-cache python3 py3-pip bash curl git
+# Variables d'environnement
+# PYTHONUNBUFFERED=1 pour que les logs Python s'affichent en temps réel
+# PORT=5000 pour Heroku
+ENV PYTHONUNBUFFERED=1
+ENV PORT=5000
 
-# Copy requirements
-ADD ./webapp/requirements.txt /tmp/requirements.txt
+# Installer bash et dépendances système nécessaires
+# curl est utilisé si besoin pour télécharger des fichiers
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    bash \
+    curl \
+ && rm -rf /var/lib/apt/lists/*   # Nettoyer le cache apt pour réduire la taille de l'image
 
-# Install dependencies
-RUN pip3 install --no-cache-dir --break-system-packages -q -r /tmp/requirements.txt
+# Copier le fichier requirements.txt et installer les dépendances Python
+COPY ./webapp/requirements.txt /tmp/requirements.txt
+RUN pip install --no-cache-dir -r /tmp/requirements.txt
 
-# Add our code
-ADD ./webapp /opt/webapp/
-WORKDIR /opt/webapp
+# Copier le code de l'application dans le conteneur
+COPY ./webapp /opt/webapp
+WORKDIR /opt/webapp  # Définir le répertoire de travail
 
-# Run the image as a non-root user
-RUN adduser -D myuser
+# Créer un utilisateur non-root pour exécuter l'application en sécurité
+RUN useradd -m myuser
 USER myuser
 
-# Run the app
-CMD gunicorn --bind 0.0.0.0:$PORT wsgi
+# Exposer le port 5000 pour que Heroku puisse accéder à l'application
+EXPOSE 5000
+
+# Lancer l'application avec gunicorn sur toutes les interfaces et le port défini
+CMD ["gunicorn", "--bind", "0.0.0.0:5000", "wsgi"]
