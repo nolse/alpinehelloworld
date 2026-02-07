@@ -1,11 +1,13 @@
-#Grab the latest alpine image
+# Grab the latest alpine image
 FROM alpine:latest
 
-# Install python and pip
-RUN apk add --no-cache --update python3 py3-pip bash
+# Install python, pip, bash, curl, git
+RUN apk add --no-cache python3 py3-pip bash curl git
+
+# Copy requirements
 ADD ./webapp/requirements.txt /tmp/requirements.txt
 
-# Install dependencies with --break-system-packages
+# Install dependencies
 RUN pip3 install --no-cache-dir --break-system-packages -q -r /tmp/requirements.txt
 
 # Add our code
