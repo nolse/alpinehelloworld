@@ -2,21 +2,24 @@ pipeline {
     agent any
 
     environment {
-        IMAGE_NAME     = "alpinehelloworld"
-        IMAGE_TAG      = "latest"
-        CONTAINER_NAME = "${IMAGE_NAME}-${BUILD_NUMBER}"
-        STAGING        = "eazytraining-staging-alpha"
-        PRODUCTION     = "eazytraining-prod-alpha"
+        HEROKU_API_KEY = credentials('heroku-api-key')
+        IMAGE_NAME = 'alphabalde/alpinehelloworld:latest'
+        PORT = '5000'
     }
 
     stages {
 
+        stage('Checkout SCM') {
+            steps {
+                checkout scm
+            }
+        }
+
         stage('Build image') {
             steps {
                 sh """
-                    docker rmi alphabalde/${IMAGE_NAME}:${IMAGE_TAG} || true
-                    docker build \
-                        -t alphabalde/${IMAGE_NAME}:${IMAGE_TAG} .
+                    docker rmi ${IMAGE_NAME} || true
+                    docker build -t ${IMAGE_NAME} .
                 """
             }
         }
@@ -24,12 +27,8 @@ pipeline {
         stage('Run container') {
             steps {
                 sh """
-                    docker rm -f ${CONTAINER_NAME} || true
-                    docker run -d \
-                        --name ${CONTAINER_NAME} \
-                        -p 5000:5000 \
-                        -e PORT=5000 \
-                        alphabalde/${IMAGE_NAME}:${IMAGE_TAG}
+                    docker rm -f alpinehelloworld || true
+                    docker run -d --name alpinehelloworld -p ${PORT}:${PORT} -e PORT=${PORT} ${IMAGE_NAME}
                 """
             }
         }
@@ -38,57 +37,58 @@ pipeline {
             steps {
                 sh """
                     echo "Attente du démarrage de l'application..."
-                    for i in {1..10}; do
-                        if docker exec ${CONTAINER_NAME} curl -s http://localhost:5000 | grep -iq "hello world"; then
-                            echo "Application OK"
-                            exit 0
-                        fi
-                        sleep 3
-                    done
-                    echo "Application non disponible"
-                    docker logs ${CONTAINER_NAME}
-                    exit 1
+                    sleep 5
+                    docker exec alpinehelloworld curl -s http://localhost:${PORT} | grep -iq 'hello world'
+                    echo "Application OK"
                 """
             }
         }
 
         stage('Clean container') {
             steps {
-                sh "docker rm -f ${CONTAINER_NAME} || true"
+                sh "docker rm -f alpinehelloworld || true"
             }
         }
 
- stage('Push image in staging and deploy') {
-    steps {
-        withCredentials([string(credentialsId: 'heroku-api-key', variable: 'HEROKU_API_KEY')]) {
-            sh """
-                # Login to Heroku Container Registry
-                echo \$HEROKU_API_KEY | docker login --username=_ --password-stdin registry.heroku.com
+        stage('Push image in staging and deploy') {
+            steps {
+                withCredentials([string(credentialsId: 'heroku-api-key', variable: 'HEROKU_API_KEY')]) {
+                    sh """
+                        echo \$HEROKU_API_KEY | docker login --username=_ --password-stdin registry.heroku.com
+                        export DOCKER_BUILDKIT=1
+                        heroku container:push web -a eazytraining-staging-alpha --no-provenance
+                        heroku container:release web -a eazytraining-staging-alpha
+                    """
+                }
+            }
+        }
 
-                # Push and release the image using Heroku CLI
-                heroku container:push web -a eazytraining-staging-alpha
-                heroku container:release web -a eazytraining-staging-alpha
-            """
+        stage('Push image in prod and deploy') {
+            when {
+                expression { return env.BRANCH_NAME == 'main' } // Push prod uniquement depuis main
+            }
+            steps {
+                withCredentials([string(credentialsId: 'heroku-api-key', variable: 'HEROKU_API_KEY')]) {
+                    sh """
+                        echo \$HEROKU_API_KEY | docker login --username=_ --password-stdin registry.heroku.com
+                        export DOCKER_BUILDKIT=1
+                        heroku container:push web -a eazytraining-prod --no-provenance
+                        heroku container:release web -a eazytraining-prod
+                    """
+                }
+            }
         }
     }
-}
-
-stage('Push image to prod and deploy') {
-    steps {
-        withCredentials([string(credentialsId: 'heroku-api-key', variable: 'HEROKU_API_KEY')]) {
-            sh """
-                echo \$HEROKU_API_KEY | docker login --username=_ --password-stdin registry.heroku.com
-                heroku container:push web -a eazytraining-prod
-                heroku container:release web -a eazytraining-prod
-            """
-        }
-    }
-  }
-}
 
     post {
         always {
-            sh "docker rm -f ${CONTAINER_NAME} || true"
+            sh "docker rm -f alpinehelloworld || true"
+        }
+        success {
+            echo 'Pipeline terminé avec succès !'
+        }
+        failure {
+            echo 'Pipeline échoué, vérifier les logs.'
         }
     }
 }
