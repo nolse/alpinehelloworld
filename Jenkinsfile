@@ -1,3 +1,4 @@
+j'ai modifier est ce que c'est bon
 pipeline {
 
     agent any   // ✅ Un seul agent pour tout le pipeline
