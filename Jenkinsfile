@@ -96,6 +96,7 @@ stage('Push image in prod and deploy') {
             """
         }
     }
+    }
 }
 
     post {
