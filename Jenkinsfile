@@ -37,16 +37,18 @@ pipeline { // AUTOMATISATION CI/CD
                 '''
             }
         }
-      stage('Test image') {
-           agent any
-           steps {
-              script {
-                sh '''
-                    curl http://localhost:80 | grep -qi "Hello world!"
-                '''
-              }
-           }
-      }
+stage('Test image') {
+    steps {
+        sh '''
+        echo "Test de l'application depuis le conteneur..."
+
+        docker exec ${CONTAINER_NAME} \
+          curl http://localhost:5000 | grep -iq "hello world"
+
+        echo "Application OK"
+        '''
+    }
+}
         stage('Clean container') {
             agent any
             steps {
