@@ -30,5 +30,4 @@ USER myuser
 EXPOSE 5000
 
 # Lancer l'application avec gunicorn sur toutes les interfaces et le port défini
-ENTRYPOINT ["sh", "-c"]
-CMD ["gunicorn", "--bind", "0.0.0.0:$PORT", "wsgi:app"]
+CMD gunicorn --bind 0.0.0.0:$PORT wsgi:app
