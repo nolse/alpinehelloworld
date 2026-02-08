@@ -1,6 +1,6 @@
 pipeline {
 
-    agent any   // 🔥 UN SEUL AGENT POUR TOUT LE PIPELINE
+    agent any   // UN SEUL AGENT POUR TOUT LE PIPELINE
 
     environment {
         IMAGE_NAME     = "alpinehelloworld"
