@@ -69,27 +69,28 @@ pipeline {
                 """
             }
         }
+stage('Push image in staging and deploy') {
+    when {
+        expression { GIT_BRANCH == 'origin/master' }
+    }
+    steps {
+        withCredentials([string(credentialsId: 'heroku-api-key', variable: 'HEROKU_API_KEY')]) {
+            sh '''
+                # Authentification Heroku
+                echo "$HEROKU_API_KEY" | docker login --username=_ --password-stdin registry.heroku.com
 
-        stage('Push image in staging and deploy') {
-            when {
-                expression { env.GIT_BRANCH == 'origin/master' }
-            }
-            steps {
-                withCredentials([string(credentialsId: 'heroku-api-key', variable: 'HEROKU_API_KEY')]) {
-                    sh """
-                        echo \$HEROKU_API_KEY | docker login --username=_ --password-stdin registry.heroku.com
+                # Tag de l'image pour Heroku
+                docker tag alphabalde/${IMAGE_NAME}:${IMAGE_TAG} registry.heroku.com/${STAGING}/web
 
-                        docker tag alphabalde/${IMAGE_NAME}:${IMAGE_TAG} \
-                            registry.heroku.com/${STAGING}/web
+                # PUSH VIA HEROKU (PAS docker push)
+                heroku container:push web -a ${STAGING}
 
-                        docker push registry.heroku.com/${STAGING}/web
-
-                        heroku container:release -a ${STAGING} web
-                    """
-                }
-            }
+                # Déploiement
+                heroku container:release web -a ${STAGING}
+            '''
         }
-
+    }
+} 
         stage('Push image in prod and deploy') {
             when {
                 expression { env.GIT_BRANCH == 'origin/master' }
