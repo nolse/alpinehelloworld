@@ -42,7 +42,7 @@ pipeline { // AUTOMATISATION CI/CD
            steps {
               script {
                 sh '''
-                    curl http://localhost:${PORT_EXPOSED} | grep -qi "Hello world!"
+                    curl curl http://localhost:80 | grep -qi "Hello world!"
                 '''
               }
            }
