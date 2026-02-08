@@ -33,26 +33,25 @@ pipeline {
                 '''
             }
         }
+stage('Test image') {
+    steps {
+        sh '''
+            echo "Attente du démarrage de l'application..."
 
-        stage('Test image') {
-            steps {
-                sh '''
-                    echo "Attente du démarrage de l'application..."
-                    for i in {1..10}; do
-                        if docker exec $CONTAINER_NAME curl -s http://localhost:5000 | grep -iq "hello world"; then
-                            echo "Application OK"
-                            exit 0
-                        fi
-                        sleep 3
-                    done
+            for i in 1 2 3 4 5 6 7 8 9 10; do
+                if docker exec $CONTAINER_NAME curl -s http://localhost:5000 | grep -iq "hello world"; then
+                    echo "Application OK"
+                    exit 0
+                fi
+                sleep 3
+            done
 
-👉 Application non disponible
-                    docker logs $CONTAINER_NAME
-                    exit 1
-                '''
-            }
-        }
-
+            echo "👉 Application non disponible"
+            docker logs $CONTAINER_NAME
+            exit 1
+        '''
+    }
+}
         stage('Clean container') {
             steps {
                 sh '''
