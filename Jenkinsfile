@@ -77,26 +77,19 @@ stage('Push image in prod and deploy') {
     steps {
         withCredentials([string(credentialsId: 'heroku-api-key', variable: 'HEROKU_API_KEY')]) {
             sh """
-                # Login Heroku
+                export DOCKER_BUILDKIT=0
+
                 echo \$HEROKU_API_KEY | docker login --username=_ --password-stdin registry.heroku.com
 
-                # Supprimer ancienne image prod
                 docker rmi registry.heroku.com/${PRODUCTION}/web || true
-
-                # Nettoyer cache pour éviter problème BuildKit
                 docker builder prune -af || true
 
-                # Tag image
                 docker tag alphabalde/${IMAGE_NAME}:${IMAGE_TAG} registry.heroku.com/${PRODUCTION}/web
-
-                # Push vers Heroku
                 docker push registry.heroku.com/${PRODUCTION}/web
-
-                # Release sur Heroku
                 heroku container:release web -a ${PRODUCTION}
             """
         }
-     }
+    }
   }
 }
 
