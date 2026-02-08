@@ -58,30 +58,27 @@ pipeline {
             }
         }
 
-        stage('Push image to staging and deploy') {
-            steps {
-                withCredentials([string(credentialsId: 'heroku-api-key', variable: 'HEROKU_API_KEY')]) {
-                    sh """
-                        echo \$HEROKU_API_KEY | docker login --username=_ --password-stdin registry.heroku.com
-                        docker tag alphabalde/${IMAGE_NAME}:${IMAGE_TAG} registry.heroku.com/${STAGING}/web
-                        docker push registry.heroku.com/${STAGING}/web
-                        heroku container:release web -a ${STAGING}
-                    """
-                }
-            }
-        }
-
-stage('Push image to prod and deploy') {
+ stage('Push image in staging and deploy') {
     steps {
         withCredentials([string(credentialsId: 'heroku-api-key', variable: 'HEROKU_API_KEY')]) {
             sh """
                 # Login to Heroku Container Registry
                 echo \$HEROKU_API_KEY | docker login --username=_ --password-stdin registry.heroku.com
 
-                # Push the Docker image via Heroku CLI
-                heroku container:push web -a eazytraining-prod
+                # Push and release the image using Heroku CLI
+                heroku container:push web -a eazytraining-staging-alpha
+                heroku container:release web -a eazytraining-staging-alpha
+            """
+        }
+    }
+}
 
-                # Release the image
+stage('Push image to prod and deploy') {
+    steps {
+        withCredentials([string(credentialsId: 'heroku-api-key', variable: 'HEROKU_API_KEY')]) {
+            sh """
+                echo \$HEROKU_API_KEY | docker login --username=_ --password-stdin registry.heroku.com
+                heroku container:push web -a eazytraining-prod
                 heroku container:release web -a eazytraining-prod
             """
         }
