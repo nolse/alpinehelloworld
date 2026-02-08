@@ -20,4 +20,4 @@ RUN useradd -m -s /bin/bash myuser
 USER myuser
 
 # CMD pour Heroku / docker run -e PORT=5000
-CMD ["gunicorn", "--bind", "0.0.0.0:$PORT", "wsgi:app"]
+CMD gunicorn --bind 0.0.0.0:$PORT wsgi:app
