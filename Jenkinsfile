@@ -16,7 +16,6 @@ pipeline {
                 sh """
                     docker rmi alphabalde/${IMAGE_NAME}:${IMAGE_TAG} || true
                     docker build \
-                        --no-cache \
                         -t alphabalde/${IMAGE_NAME}:${IMAGE_TAG} .
                 """
             }
@@ -63,8 +62,9 @@ pipeline {
             steps {
                 withCredentials([string(credentialsId: 'heroku-api-key', variable: 'HEROKU_API_KEY')]) {
                     sh """
-                        heroku container:login
-                        heroku container:push web -a ${STAGING}
+                        echo \$HEROKU_API_KEY | docker login --username=_ --password-stdin registry.heroku.com
+                        docker tag alphabalde/${IMAGE_NAME}:${IMAGE_TAG} registry.heroku.com/${STAGING}/web
+                        docker push registry.heroku.com/${STAGING}/web
                         heroku container:release web -a ${STAGING}
                     """
                 }
@@ -78,8 +78,9 @@ pipeline {
             steps {
                 withCredentials([string(credentialsId: 'heroku-api-key', variable: 'HEROKU_API_KEY')]) {
                     sh """
-                        heroku container:login
-                        heroku container:push web -a ${PRODUCTION}
+                        echo \$HEROKU_API_KEY | docker login --username=_ --password-stdin registry.heroku.com
+                        docker tag alphabalde/${IMAGE_NAME}:${IMAGE_TAG} registry.heroku.com/${PRODUCTION}/web
+                        docker push registry.heroku.com/${PRODUCTION}/web
                         heroku container:release web -a ${PRODUCTION}
                     """
                 }
