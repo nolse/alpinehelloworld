@@ -38,6 +38,7 @@ pipeline { // AUTOMATISATION CI/CD
             }
         }
 stage('Test image') {
+    agent any
     steps {
         sh '''
         echo "Test de l'application depuis le conteneur..."
