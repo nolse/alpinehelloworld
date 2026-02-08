@@ -15,7 +15,9 @@ pipeline {
         stage('Build image') {
             steps {
                 sh """
-                    docker build \
+                     docker rmi alphabalde/${IMAGE_NAME}:${IMAGE_TAG} || true
+                     docker build \
+                       --no-cache \
                        --platform linux/amd64 \
                        -t alphabalde/${IMAGE_NAME}:${IMAGE_TAG} .
 
