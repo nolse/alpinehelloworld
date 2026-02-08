@@ -46,7 +46,7 @@ stage('Test image') {
                 sleep 3
             done
 
-            echo "👉 Application non disponible"
+            echo "Application non disponible"
             docker logs $CONTAINER_NAME
             exit 1
         '''
@@ -62,7 +62,7 @@ stage('Test image') {
 
         stage('Push image in staging and deploy') {
             when {
-                branch 'master'
+                expression { GIT_BRANCH == 'origin/master' }
             }
             environment {
                 HEROKU_API_KEY = credentials('HEROKU_API_KEY')
@@ -79,7 +79,7 @@ stage('Test image') {
 
         stage('Push image in prod and deploy') {
             when {
-                branch 'master'
+                expression { GIT_BRANCH == 'origin/master' }
             }
             environment {
                 HEROKU_API_KEY = credentials('HEROKU_API_KEY')
