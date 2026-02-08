@@ -65,10 +65,13 @@ stage('Test image') {
                 expression { GIT_BRANCH == 'origin/master' }
             }
             environment {
-                HEROKU_API_KEY = credentials('HEROKU_API_KEY')
+                HEROKU_API_KEY = credentials('heroku-api-key')
             }
             steps {
                 sh '''
+                    withCredentials([string(credentialsId: 'heroku-api-key', variable: 'HEROKU_API_KEY')]) {
+                    echo $HEROKU_API_KEY | docker login --username=_ --password-stdin registry.heroku.com
+                    docker push registry.heroku.com/myapp/web:latest
                     docker login --username=_ --password-stdin registry.heroku.com <<< "$HEROKU_API_KEY"
                     docker tag alphabalde/${IMAGE_NAME}:${IMAGE_TAG} registry.heroku.com/${STAGING}/web
                     docker push registry.heroku.com/${STAGING}/web
@@ -82,7 +85,7 @@ stage('Test image') {
                 expression { GIT_BRANCH == 'origin/master' }
             }
             environment {
-                HEROKU_API_KEY = credentials('HEROKU_API_KEY')
+                HEROKU_API_KEY = credentials('heroku-api-key')
             }
             steps {
                 sh '''
