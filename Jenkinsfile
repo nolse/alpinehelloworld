@@ -71,7 +71,7 @@ pipeline {
         }
 stage('Push image in staging and deploy') {
     steps {
-        withCredentials([string(credentialsId: 'HEROKU_API_KEY', variable: 'HEROKU_API_KEY')]) {
+        withCredentials([string(credentialsId: 'heroku-api-key', variable: 'HEROKU_API_KEY')]) {
             sh '''
                 echo $HEROKU_API_KEY | docker login --username=_ --password-stdin registry.heroku.com
                 docker tag alphabalde/alpinehelloworld:latest registry.heroku.com/eazytraining-staging-alpha/web
