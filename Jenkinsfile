@@ -83,8 +83,10 @@ stage('Push image in staging and deploy') {
                 }
             }
         }
-    } 
-}        stage('Push image in prod and deploy') {
+    }
+}        
+        
+        stage('Push image in prod and deploy') {
             when {
                 expression { env.GIT_BRANCH == 'origin/master' }
             }
