@@ -9,7 +9,6 @@ pipeline {
         STAGING        = "eazytraining-staging-alpha"
         PRODUCTION     = "eazytraining-prod-alpha"
     }
-
     stages {
 
         stage('Build image') {
