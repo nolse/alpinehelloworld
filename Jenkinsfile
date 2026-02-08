@@ -55,20 +55,24 @@ pipeline {
             }
         }
 
-        stage('Push image in staging and deploy') {
-            steps {
-                withCredentials([string(credentialsId: 'heroku-api-key', variable: 'HEROKU_API_KEY')]) {
-                    withEnv(["DOCKER_BUILDKIT=0", "COMPOSE_DOCKER_CLI_BUILD=0"]) {
-                        sh '''
-                            echo $HEROKU_API_KEY | docker login --username=_ --password-stdin registry.heroku.com
-                            docker tag alphabalde/alpinehelloworld:latest registry.heroku.com/eazytraining-staging-alpha/web
-                            docker push registry.heroku.com/eazytraining-staging-alpha/web
-                            /usr/bin/heroku container:release web -a eazytraining-staging-alpha
-                        '''
-                    }
-                }
-            }
+stage('Push image in staging and deploy') {
+    steps {
+        withCredentials([string(credentialsId: 'heroku-api-key', variable: 'HEROKU_API_KEY')]) {
+            sh """
+                export DOCKER_BUILDKIT=0
+
+                echo \$HEROKU_API_KEY | docker login --username=_ --password-stdin registry.heroku.com
+
+                docker rmi registry.heroku.com/${STAGING}/web || true
+                docker builder prune -af || true
+
+                docker tag alphabalde/${IMAGE_NAME}:${IMAGE_TAG} registry.heroku.com/${STAGING}/web
+                docker push registry.heroku.com/${STAGING}/web
+                heroku container:release web -a ${STAGING}
+            """
         }
+    }
+}
 
 stage('Push image in prod and deploy') {
     when {
@@ -90,8 +94,8 @@ stage('Push image in prod and deploy') {
             """
         }
     }
-  }
 }
+        
 
     post {
         always {
