@@ -16,6 +16,9 @@ pipeline {
             steps {
                 sh """
                      docker rmi alphabalde/${IMAGE_NAME}:${IMAGE_TAG} || true
+                     
+                     export DOCKER_BUILDKIT=0
+                     
                      docker build \
                        --no-cache \
                        --platform linux/amd64 \
