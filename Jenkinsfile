@@ -70,25 +70,33 @@ pipeline {
             }
         }
 
-        stage('Push image in prod and deploy') {
-            when {
-                expression { env.GIT_BRANCH == 'origin/master' }
-            }
-            steps {
-                withCredentials([string(credentialsId: 'heroku-api-key', variable: 'HEROKU_API_KEY')]) {
-                    withEnv(["DOCKER_BUILDKIT=0", "COMPOSE_DOCKER_CLI_BUILD=0"]) {
-                        sh """
-                            echo \$HEROKU_API_KEY | docker login --username=_ --password-stdin registry.heroku.com
-                            docker rmi registry.heroku.com/${PRODUCTION}/web || true
-                            docker tag alphabalde/${IMAGE_NAME}:${IMAGE_TAG} registry.heroku.com/${PRODUCTION}/web
-                            docker push registry.heroku.com/${PRODUCTION}/web
-                            heroku container:release web -a ${PRODUCTION}
-                        """
-                    }
-                }
-            }
+stage('Push image in prod and deploy') {
+    when {
+        expression { env.GIT_BRANCH == 'origin/master' }
+    }
+    steps {
+        withCredentials([string(credentialsId: 'heroku-api-key', variable: 'HEROKU_API_KEY')]) {
+            sh """
+                echo \$HEROKU_API_KEY | docker login --username=_ --password-stdin registry.heroku.com
+
+                # Supprimer ancienne image prod
+                docker rmi registry.heroku.com/${PRODUCTION}/web || true
+
+                # Nettoyer cache pour éviter problème de BuildKit
+                docker builder prune -af || true
+
+                # Tag image
+                docker tag alphabalde/${IMAGE_NAME}:${IMAGE_TAG} registry.heroku.com/${PRODUCTION}/web
+
+                # Push sur Heroku
+                docker push registry.heroku.com/${PRODUCTION}/web
+
+                # Release
+                heroku container:release web -a ${PRODUCTION}
+            """
         }
     }
+}
 
     post {
         always {
