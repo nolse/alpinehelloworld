@@ -39,15 +39,33 @@ pipeline { // AUTOMATISATION CI/CD
         }
 
         stage('Test image') {
-            agent any
-            steps {
-                // Tester que l'application répond bien avec "Hello world!"
-                sh '''
-                    curl http://172.17.0.1:80 | grep -iq "hello world!"
-                '''
-            }
-        }
+    steps {
+        sh '''
+            # Nom du conteneur utilisé dans les stages précédents
+            CONTAINER_NAME=alpinehelloworld-28
 
+            echo "Attente que l'application soit disponible dans le conteneur..."
+
+            # Boucle d'attente : on teste toutes les 2 secondes si l'app répond
+            # Cela évite les faux échecs si Gunicorn démarre lentement
+            for i in {1..10}; do
+                if docker exec $CONTAINER_NAME curl -s http://localhost:5000 > /tmp/app_response.txt; then
+                    echo "Application accessible ✅"
+                    break
+                fi
+                echo "Application pas encore prête... tentative $i"
+                sleep 2
+            done
+
+            echo "Vérification du contenu de la réponse HTTP..."
+
+            # Vérifie que la page contient bien "hello world!"
+            docker exec $CONTAINER_NAME curl -s http://localhost:5000 | grep -iq "hello world!"
+
+            echo "Test fonctionnel réussi 🎉"
+        '''
+    }
+}
         stage('Clean container') {
             agent any
             steps {
