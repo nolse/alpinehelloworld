@@ -41,11 +41,8 @@ pipeline { // AUTOMATISATION CI/CD
         stage('Test image') {
     steps {
         sh '''
-            # Nom du conteneur utilisé dans les stages précédents
-            CONTAINER_NAME=alpinehelloworld-28
-
+            # Nom du conteneur utilisé dans les stages précédent
             echo "Attente que l'application soit disponible dans le conteneur..."
-
             # Boucle d'attente : on teste toutes les 2 secondes si l'app répond
             # Cela évite les faux échecs si Gunicorn démarre lentement
             for i in {1..10}; do
