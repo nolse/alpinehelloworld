@@ -115,7 +115,6 @@ stage('Push image in prod and deploy') {
         }
     }
 }
-
     post {
         always {
             sh "docker rm -f ${CONTAINER_NAME} || true"
