@@ -50,35 +50,35 @@ pipeline {
             }
         }
 
-        stage('Push image in staging and deploy') {
-            steps {
-                withCredentials([string(credentialsId: 'heroku-api-key', variable: 'HEROKU_API_KEY')]) {
-                    sh """
-                        echo \$HEROKU_API_KEY | docker login --username=_ --password-stdin registry.heroku.com
-                        export DOCKER_BUILDKIT=1
-                        heroku container:push web -a eazytraining-staging-alpha --no-provenance
-                        heroku container:release web -a eazytraining-staging-alpha
-                    """
-                }
-            }
-        }
-
-        stage('Push image in prod and deploy') {
-            when {
-                expression { return env.BRANCH_NAME == 'main' } // Push prod uniquement depuis main
-            }
-            steps {
-                withCredentials([string(credentialsId: 'heroku-api-key', variable: 'HEROKU_API_KEY')]) {
-                    sh """
-                        echo \$HEROKU_API_KEY | docker login --username=_ --password-stdin registry.heroku.com
-                        export DOCKER_BUILDKIT=1
-                        heroku container:push web -a eazytraining-prod --no-provenance
-                        heroku container:release web -a eazytraining-prod
-                    """
-                }
-            }
+stage('Push image in staging and deploy') {
+    steps {
+        withCredentials([string(credentialsId: 'heroku-api-key', variable: 'HEROKU_API_KEY')]) {
+            sh """
+                echo \$HEROKU_API_KEY | docker login --username=_ --password-stdin registry.heroku.com
+                docker tag ${IMAGE_NAME} registry.heroku.com/eazytraining-staging-alpha/web
+                docker push registry.heroku.com/eazytraining-staging-alpha/web
+                heroku container:release web -a eazytraining-staging-alpha
+            """
         }
     }
+}
+
+stage('Push image in prod and deploy') {
+    when {
+        expression { return env.BRANCH_NAME == 'main' }
+    }
+    steps {
+        withCredentials([string(credentialsId: 'heroku-api-key', variable: 'HEROKU_API_KEY')]) {
+            sh """
+                echo \$HEROKU_API_KEY | docker login --username=_ --password-stdin registry.heroku.com
+                docker tag ${IMAGE_NAME} registry.heroku.com/eazytraining-prod/web
+                docker push registry.heroku.com/eazytraining-prod/web
+                heroku container:release web -a eazytraining-prod
+            """
+        }
+    }
+  }
+}
 
     post {
         always {
