@@ -71,19 +71,25 @@ pipeline {
         }
 stage('Push image in staging and deploy') {
     steps {
-        script {
-            withCredentials([string(credentialsId: 'heroku-api-key', variable: 'HEROKU_API_KEY')]) {
-                // PAS de BuildKit pour le push
+        withCredentials([string(credentialsId: 'heroku-api-key', variable: 'HEROKU_API_KEY')]) {
+            // Désactivation BuildKit pour éviter les problèmes
+            withEnv(["DOCKER_BUILDKIT=0", "COMPOSE_DOCKER_CLI_BUILD=0"]) {
                 sh '''
                     echo $HEROKU_API_KEY | docker login --username=_ --password-stdin registry.heroku.com
+
+                    # Tag de l'image locale
                     docker tag alphabalde/alpinehelloworld:latest registry.heroku.com/eazytraining-staging-alpha/web
-                    /usr/bin/heroku container:push web -a eazytraining-staging-alpha
+
+                    # Push manuel sans build automatique
+                    docker push registry.heroku.com/eazytraining-staging-alpha/web
+
+                    # Release sur Heroku
                     /usr/bin/heroku container:release web -a eazytraining-staging-alpha
                 '''
             }
         }
     }
-}        
+}
         
         stage('Push image in prod and deploy') {
             when {
