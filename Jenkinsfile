@@ -72,20 +72,17 @@ pipeline {
         }
 
 stage('Push image to prod and deploy') {
-    when {
-        expression { env.GIT_BRANCH == 'origin/master' }
-    }
     steps {
         withCredentials([string(credentialsId: 'heroku-api-key', variable: 'HEROKU_API_KEY')]) {
             sh """
-                # Login to Heroku registry
+                # Login to Heroku Container Registry
                 echo \$HEROKU_API_KEY | docker login --username=_ --password-stdin registry.heroku.com
 
-                # Push image to Heroku prod app
-                heroku container:push web -a ${PRODUCTION}
+                # Push image to prod app
+                heroku container:push web -a eazytraining-prod
 
                 # Release the pushed image
-                heroku container:release web -a ${PRODUCTION}
+                heroku container:release web -a eazytraining-prod
             """
         }
     }
