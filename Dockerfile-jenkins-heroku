@@ -5,6 +5,7 @@ USER root
 # Installer curl et Heroku CLI
 RUN apt-get update && \
     apt-get install -y curl apt-transport-https gnupg && \
-    curl https://cli-assets.heroku.com/install-ubuntu.sh | sh
+    curl https://cli-assets.heroku.com/install-ubuntu.sh | sh && \
+    apt-get clean
 
 USER jenkins
