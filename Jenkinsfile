@@ -43,8 +43,8 @@ stage('Test image') {
         sh '''
         echo "Test de l'application depuis le conteneur..."
 
-        docker exec ${CONTAINER_NAME} \
-          curl http://localhost:5000 | grep -iq "hello world"
+        docker exec alpinehelloworld-37 \
+        curl -s http://localhost:5000 | grep -iq "hello world"
 
         echo "Application OK"
         '''
