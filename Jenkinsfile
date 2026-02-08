@@ -78,10 +78,10 @@ stage('Push image to prod and deploy') {
                 # Login to Heroku Container Registry
                 echo \$HEROKU_API_KEY | docker login --username=_ --password-stdin registry.heroku.com
 
-                # Push image to prod app
+                # Push the Docker image via Heroku CLI
                 heroku container:push web -a eazytraining-prod
 
-                # Release the pushed image
+                # Release the image
                 heroku container:release web -a eazytraining-prod
             """
         }
