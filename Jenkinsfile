@@ -15,7 +15,10 @@ pipeline {
         stage('Build image') {
             steps {
                 sh """
-                    docker build -t alphabalde/${IMAGE_NAME}:${IMAGE_TAG} .
+                    docker build \
+                       --platform linux/amd64 \
+                       -t alphabalde/${IMAGE_NAME}:${IMAGE_TAG} .
+
                 """
             }
         }
