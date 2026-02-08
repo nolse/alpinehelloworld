@@ -15,15 +15,14 @@ pipeline {
         stage('Build image') {
             steps {
                 sh """
-                     docker rmi alphabalde/${IMAGE_NAME}:${IMAGE_TAG} || true
-                     
-                     export DOCKER_BUILDKIT=0
-                     
-                     docker build \
-                       --no-cache \
-                       --platform linux/amd64 \
-                       -t alphabalde/${IMAGE_NAME}:${IMAGE_TAG} .
+                    docker rmi alphabalde/${IMAGE_NAME}:${IMAGE_TAG} || true
 
+                    export DOCKER_BUILDKIT=0
+
+                    docker build \
+                        --no-cache \
+                        --platform linux/amd64 \
+                        -t alphabalde/${IMAGE_NAME}:${IMAGE_TAG} .
                 """
             }
         }
@@ -69,56 +68,60 @@ pipeline {
                 """
             }
         }
-stage('Push image in staging and deploy') {
-    steps {
-        withCredentials([string(credentialsId: 'heroku-api-key', variable: 'HEROKU_API_KEY')]) {
-            // Désactivation BuildKit pour éviter les problèmes
-            withEnv(["DOCKER_BUILDKIT=0", "COMPOSE_DOCKER_CLI_BUILD=0"]) {
-                sh '''
-                    echo $HEROKU_API_KEY | docker login --username=_ --password-stdin registry.heroku.com
 
-                    # Tag de l'image locale
-                    docker tag alphabalde/alpinehelloworld:latest registry.heroku.com/eazytraining-staging-alpha/web
+        stage('Push image in staging and deploy') {
+            steps {
+                withCredentials([string(credentialsId: 'heroku-api-key', variable: 'HEROKU_API_KEY')]) {
+                    // Désactivation BuildKit pour éviter les problèmes
+                    withEnv(["DOCKER_BUILDKIT=0", "COMPOSE_DOCKER_CLI_BUILD=0"]) {
+                        sh '''
+                            echo $HEROKU_API_KEY | docker login --username=_ --password-stdin registry.heroku.com
 
-                    # Push manuel sans build automatique
-                    docker push registry.heroku.com/eazytraining-staging-alpha/web
+                            # Tag de l'image locale
+                            docker tag alphabalde/alpinehelloworld:latest registry.heroku.com/eazytraining-staging-alpha/web
 
-                    # Release sur Heroku
-                    /usr/bin/heroku container:release web -a eazytraining-staging-alpha
-                '''
+                            # Push manuel sans build automatique
+                            docker push registry.heroku.com/eazytraining-staging-alpha/web
+
+                            # Release sur Heroku
+                            /usr/bin/heroku container:release web -a eazytraining-staging-alpha
+                        '''
+                    }
+                }
             }
         }
-    }
-}
-        
-stage('Push image in prod and deploy') {
-    when {
-        expression { env.GIT_BRANCH == 'origin/master' }
-    }
-    steps {
-        withCredentials([string(credentialsId: 'heroku-api-key', variable: 'HEROKU_API_KEY')]) {
-            // Désactivation BuildKit pour éviter les erreurs
-            withEnv(["DOCKER_BUILDKIT=0", "COMPOSE_DOCKER_CLI_BUILD=0"]) {
-                sh """
-                    echo \$HEROKU_API_KEY | docker login --username=_ --password-stdin registry.heroku.com
 
-                    # Tag de l'image locale pour prod
-                    docker tag alphabalde/${IMAGE_NAME}:${IMAGE_TAG} registry.heroku.com/${PRODUCTION}/web
+        stage('Push image in prod and deploy') {
+            when {
+                expression { env.GIT_BRANCH == 'origin/master' }
+            }
+            steps {
+                withCredentials([string(credentialsId: 'heroku-api-key', variable: 'HEROKU_API_KEY')]) {
+                    // Désactivation BuildKit pour éviter les erreurs
+                    withEnv(["DOCKER_BUILDKIT=0", "COMPOSE_DOCKER_CLI_BUILD=0"]) {
+                        sh """
+                            echo \$HEROKU_API_KEY | docker login --username=_ --password-stdin registry.heroku.com
 
-                    # Push sur le registry Heroku
-                    docker push registry.heroku.com/${PRODUCTION}/web
+                            # Tag de l'image locale pour prod
+                            docker tag alphabalde/${IMAGE_NAME}:${IMAGE_TAG} registry.heroku.com/${PRODUCTION}/web
 
-                    # Release sur Heroku
-                    heroku container:release web -a ${PRODUCTION}
-                """
+                            # Push sur le registry Heroku
+                            docker push registry.heroku.com/${PRODUCTION}/web
+
+                            # Release sur Heroku
+                            heroku container:release web -a ${PRODUCTION}
+                        """
+                    }
+                }
             }
         }
+
     }
-}
+
     post {
         always {
             sh "docker rm -f ${CONTAINER_NAME} || true"
         }
     }
-  }
-}   
+
+}
