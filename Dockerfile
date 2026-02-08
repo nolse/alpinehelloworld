@@ -19,7 +19,7 @@ COPY ./webapp/requirements.txt /tmp/requirements.txt
 RUN pip install --no-cache-dir -r /tmp/requirements.txt
 
 # Copier le code de l'application dans le conteneur
-COPY ./webapp /opt/webapp
+ADD ./webapp /opt/webapp/
 WORKDIR /opt/webapp  # Définir le répertoire de travail
 
 # Créer un utilisateur non-root pour exécuter l'application en sécurité
@@ -30,4 +30,4 @@ USER myuser
 EXPOSE 5000
 
 # Lancer l'application avec gunicorn sur toutes les interfaces et le port défini
-CMD ["gunicorn", "--bind", "0.0.0.0:5000", "wsgi"]
+CMD ["gunicorn", "--bind", "0.0.0.0:$PORT", "wsgi:app"]
