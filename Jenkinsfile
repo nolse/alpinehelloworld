@@ -72,11 +72,11 @@ pipeline {
                         # Tag de l'image
                         docker tag alphabalde/alpinehelloworld:latest registry.heroku.com/eazytraining-staging-alpha/web
 
-                        # Supprimer l'ancienne image locale
-                        docker rmi registry.heroku.com/eazytraining-staging-alpha/web || true
-
                         # Push
                         docker push registry.heroku.com/eazytraining-staging-alpha/web
+                        
+                        # Supprimer l'ancienne image locale
+                        docker rmi registry.heroku.com/eazytraining-staging-alpha/web || true
 
                         # Release
                         heroku container:release web -a eazytraining-staging-alpha
@@ -96,13 +96,13 @@ pipeline {
 
                         # Tag de l'image
                         docker tag alphabalde/alpinehelloworld:latest registry.heroku.com/eazytraining-prod-alpha/web
-
-                        # Supprimer l'ancienne image locale
-                        docker rmi registry.heroku.com/eazytraining-prod-alpha/web || true
-
+                        
                         # Push
                         docker push registry.heroku.com/eazytraining-prod-alpha/web
-
+                       
+                        # Supprimer l'ancienne image locale
+                        docker rmi registry.heroku.com/eazytraining-prod-alpha/web || true
+                        
                         # Release
                         heroku container:release web -a eazytraining-prod-alpha
                     '''
