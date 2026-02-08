@@ -59,27 +59,28 @@ stage('Test image') {
                 '''
             }
         }
+stage('Push image in staging and deploy') {
+    when {
+        expression { GIT_BRANCH == 'origin/master' }
+    }
+    steps {
+        withCredentials([string(credentialsId: 'heroku-api-key', variable: 'HEROKU_API_KEY')]) {
+            sh """
+                # Login to Heroku container registry
+                echo \$HEROKU_API_KEY | docker login --username=_ --password-stdin registry.heroku.com
 
-        stage('Push image in staging and deploy') {
-            when {
-                expression { GIT_BRANCH == 'origin/master' }
-            }
-            environment {
-                HEROKU_API_KEY = credentials('heroku-api-key')
-            }
-            steps {
-                sh '''
-                    withCredentials([string(credentialsId: 'heroku-api-key', variable: 'HEROKU_API_KEY')]) {
-                    echo $HEROKU_API_KEY | docker login --username=_ --password-stdin registry.heroku.com
-                    docker push registry.heroku.com/myapp/web:latest
-                    docker login --username=_ --password-stdin registry.heroku.com <<< "$HEROKU_API_KEY"
-                    docker tag alphabalde/${IMAGE_NAME}:${IMAGE_TAG} registry.heroku.com/${STAGING}/web
-                    docker push registry.heroku.com/${STAGING}/web
-                    heroku container:release -a $STAGING web
-                '''
-            }
+                # Tag the image for Heroku staging app
+                docker tag alphabalde/\${IMAGE_NAME}:\${IMAGE_TAG} registry.heroku.com/\${STAGING}/web
+
+                # Push the image
+                docker push registry.heroku.com/\${STAGING}/web
+
+                # Release the container on Heroku
+                heroku container:release -a \$STAGING web
+            """
         }
-
+    }
+}
         stage('Push image in prod and deploy') {
             when {
                 expression { GIT_BRANCH == 'origin/master' }
