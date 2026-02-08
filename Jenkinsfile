@@ -71,18 +71,20 @@ pipeline {
         }
 stage('Push image in staging and deploy') {
     steps {
-        withCredentials([string(credentialsId: 'heroku-api-key', variable: 'HEROKU_API_KEY')]) {
-            sh '''
-                echo $HEROKU_API_KEY | docker login --username=_ --password-stdin registry.heroku.com
-                docker tag alphabalde/alpinehelloworld:latest registry.heroku.com/eazytraining-staging-alpha/web
-                HEROKU_EXPERIMENTAL_DOCKER_PROVENANCE=false
-                /usr/bin/heroku container:push web -a eazytraining-staging-alpha
-                /usr/bin/heroku container:release web -a eazytraining-staging-alpha
-            '''
+        script {
+            withCredentials([string(credentialsId: 'heroku-api-key', variable: 'HEROKU_API_KEY')]) {
+                withEnv(["DOCKER_BUILDKIT=1"]) {
+                    sh '''
+                        echo $HEROKU_API_KEY | docker login --username=_ --password-stdin registry.heroku.com
+                        docker tag alphabalde/alpinehelloworld:latest registry.heroku.com/eazytraining-staging-alpha/web
+                        /usr/bin/heroku container:push web -a eazytraining-staging-alpha
+                        /usr/bin/heroku container:release web -a eazytraining-staging-alpha
+                    '''
+                }
+            }
         }
-    }
-} 
-        stage('Push image in prod and deploy') {
+    } 
+}        stage('Push image in prod and deploy') {
             when {
                 expression { env.GIT_BRANCH == 'origin/master' }
             }
