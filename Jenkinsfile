@@ -71,22 +71,26 @@ pipeline {
             }
         }
 
-        stage('Push image to prod and deploy') {
-            when {
-                expression { env.GIT_BRANCH == 'origin/master' }
-            }
-            steps {
-                withCredentials([string(credentialsId: 'heroku-api-key', variable: 'HEROKU_API_KEY')]) {
-                    sh """
-                        echo \$HEROKU_API_KEY | docker login --username=_ --password-stdin registry.heroku.com
-                        docker tag alphabalde/${IMAGE_NAME}:${IMAGE_TAG} registry.heroku.com/${PRODUCTION}/web
-                        docker push registry.heroku.com/${PRODUCTION}/web
-                        heroku container:release web -a ${PRODUCTION}
-                    """
-                }
-            }
+stage('Push image to prod and deploy') {
+    when {
+        expression { env.GIT_BRANCH == 'origin/master' }
+    }
+    steps {
+        withCredentials([string(credentialsId: 'heroku-api-key', variable: 'HEROKU_API_KEY')]) {
+            sh """
+                # Login to Heroku registry
+                echo \$HEROKU_API_KEY | docker login --username=_ --password-stdin registry.heroku.com
+
+                # Push image to Heroku prod app
+                heroku container:push web -a ${PRODUCTION}
+
+                # Release the pushed image
+                heroku container:release web -a ${PRODUCTION}
+            """
         }
     }
+  }
+}
 
     post {
         always {
