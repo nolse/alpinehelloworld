@@ -75,7 +75,7 @@ pipeline {
         stage('Push image in staging and deploy it') {
             agent {
                 docker {
-                    image 'heroku/heroku:20'
+                    image 'heroku/cli:20'
                     args '-v /var/run/docker.sock:/var/run/docker.sock'
                 }
             }
@@ -99,7 +99,7 @@ pipeline {
             }
             agent {
                 docker {
-                    image 'heroku/heroku:20'
+                    image 'heroku/cli:20'
                     args '-v /var/run/docker.sock:/var/run/docker.sock'
                 }
             }
