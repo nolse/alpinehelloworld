@@ -38,7 +38,9 @@ pipeline {
            steps {
               script {
                 sh '''
-                    curl http://172.17.0.1:${PORT_EXPOSED} | grep -qi "Hello world!"
+                    def status = sh(script: 'curl http://172.17.0.1:${PORT_EXPOSED} | grep -qi "Hello world!"', returnStatus: true)
+                    if (status != 0) {
+                    error "Test failed"
                 '''
               }
            }
