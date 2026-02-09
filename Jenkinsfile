@@ -54,20 +54,23 @@ pipeline {
           }
      }
 
-     stage ('Login and Push Image on docker hub') {
-          agent any
-        environment {
-           DOCKERHUB_PASSWORD  = credentials('dockerhub')
-        }            
-          steps {
-             script {
-               sh '''
-                   echo $DOCKERHUB_PASSWORD_PSW | docker login -u $ID_DOCKER --password-stdin
-                   docker push ${ID_DOCKER}/$IMAGE_NAME:$IMAGE_TAG
-               '''
-             }
-          }
-      }    
+stage('Login and Push Image on Docker Hub') {
+    agent any
+    steps {
+        withCredentials([usernamePassword(
+            credentialsId: 'dockerhub',   // ton ID Jenkins pour Docker Hub
+            usernameVariable: 'DOCKERHUB_USER',
+            passwordVariable: 'DOCKERHUB_PASSWORD'
+        )]) {
+            script {
+                sh """
+                    echo "$DOCKERHUB_PASSWORD" | docker login -u "$DOCKERHUB_USER" --password-stdin
+                    docker push ${DOCKERHUB_USER}/$IMAGE_NAME:$IMAGE_TAG
+                """
+            }
+        }
+    }
+} 
      
      stage('Push image in staging and deploy it') {
        when {
