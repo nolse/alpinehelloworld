@@ -74,6 +74,7 @@ stage('Login and Push Image on Docker Hub') {
 } 
 
 stage('Push image in staging and deploy it') {
+    agent any
     steps {
         withCredentials([string(credentialsId: 'heroku_api_key', variable: 'HEROKU_API_KEY')]) {
             sh '''
