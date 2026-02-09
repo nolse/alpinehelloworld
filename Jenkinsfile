@@ -72,28 +72,24 @@ stage('Login and Push Image on Docker Hub') {
         }
     }
 } 
-     
      stage('Push image in staging and deploy it') {
-       when {
-              expression { GIT_BRANCH == 'origin/master' }
-            }
-      agent any
-      environment {
-          HEROKU_API_KEY = credentials('heroku_api_key')
-      }  
-      steps {
-          script {
-            sh '''
-              npm i -g heroku@7.68.0
-              heroku container:login
-              heroku create $STAGING || echo "project already exist"
-              heroku container:push -a $STAGING web
-              heroku container:release -a $STAGING web
-            '''
-          }
+    agent {
+        docker {
+            image 'node:18-alpine'
+            args '-v /var/run/docker.sock:/var/run/docker.sock'
         }
-     }
-
+    }
+    steps {
+        withCredentials([string(credentialsId: 'HEROKU_API_KEY', variable: 'HEROKU_API_KEY')]) {
+            sh """
+                npm install -g heroku
+                heroku container:login
+                heroku container:push -a alphabalde-staging web
+                heroku container:release -a alphabalde-staging web
+            """
+        }
+    }
+}
 
      stage('Push image in production and deploy it') {
        when {
