@@ -32,7 +32,7 @@ pipeline {
                }
             }
        }
-          
+      
        stage('Test image') {
            agent any
            steps {
