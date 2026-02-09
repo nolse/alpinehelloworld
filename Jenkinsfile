@@ -72,24 +72,26 @@ stage('Login and Push Image on Docker Hub') {
         }
     }
 } 
-     stage('Push image in staging and deploy it') {
-    agent {
-        docker {
-            image 'node:18-alpine'
-            args '-v /var/run/docker.sock:/var/run/docker.sock'
-        }
-    }
+
+stage('Push image in staging and deploy it') {
     steps {
         withCredentials([string(credentialsId: 'heroku_api_key', variable: 'HEROKU_API_KEY')]) {
-            sh """
+            sh '''
+                # Installation Heroku CLI
                 npm install -g heroku
+
+                # Login Heroku (utilise docker CLI du node Jenkins)
                 heroku container:login
+
+                # Push image vers le registry Heroku
                 heroku container:push -a alphabalde-staging web
+
+                # Release sur Heroku
                 heroku container:release -a alphabalde-staging web
-            """
+            '''
         }
     }
-}
+}          
 
      stage('Push image in production and deploy it') {
        when {
