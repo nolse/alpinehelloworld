@@ -7,6 +7,7 @@ pipeline {
 //       PORT_EXPOSED = "80" à paraméter dans le job
        STAGING = "${ID_DOCKER}-staging"
        PRODUCTION = "${ID_DOCKER}-production"
+       ID_DOCKER = "monuser"  // Remplace 'monuser' par ton identifiant Docker Hub   
      }
      agent none
      stages {
