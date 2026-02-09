@@ -1,5 +1,6 @@
 pipeline {
      environment {
+       PORT_EXPOSED = "80"   
        ID_DOCKER = "${ID_DOCKER_PARAMS}"
        IMAGE_NAME = "alpinehelloworld"
        IMAGE_TAG = "latest"
