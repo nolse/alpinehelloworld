@@ -86,3 +86,34 @@ pipeline {
                         heroku container:push -a alphabalde-staging web
                         heroku container:release -a alphabalde-staging web
                     '''
+                }
+            }
+        }
+
+        /* ===========================
+           PRODUCTION – HEROKU (FIX FINAL)
+           =========================== */
+        stage('Push image in production and deploy it') {
+            when {
+                expression { GIT_BRANCH == 'origin/production' }
+            }
+            agent {
+                docker {
+                    image 'heroku/heroku:20'
+                    args '-v /var/run/docker.sock:/var/run/docker.sock'
+                }
+            }
+            environment {
+                HEROKU_API_KEY = credentials('heroku_api_key')
+            }
+            steps {
+                sh '''
+                    heroku container:login
+                    heroku create $PRODUCTION || echo "project already exist"
+                    heroku container:push -a $PRODUCTION web
+                    heroku container:release -a $PRODUCTION web
+                '''
+            }
+        }
+    }
+}
