@@ -72,23 +72,23 @@ pipeline {
         /* ===========================
            STAGING – HEROKU (FIX FINAL)
            =========================== */
-        stage('Push image in staging and deploy it') {
-            agent {
-                docker {
-                    image 'heroku/cli:20'
-                    args '-v /var/run/docker.sock:/var/run/docker.sock'
-                }
-            }
-            steps {
-                withCredentials([string(credentialsId: 'heroku_api_key', variable: 'HEROKU_API_KEY')]) {
-                    sh '''
-                        heroku container:login
-                        heroku container:push -a alphabalde-staging web
-                        heroku container:release -a alphabalde-staging web
-                    '''
-                }
+        
+stage('Push image in staging and deploy it') {
+    agent any
+    steps {
+        withCredentials([string(credentialsId: 'heroku_api_key', variable: 'HEROKU_API_KEY')]) {
+            script {
+                // Installer Heroku CLI au moment de l'exécution
+                sh '''
+                    curl https://cli-assets.heroku.com/install.sh | sh
+                    heroku container:login
+                    heroku container:push web --app alphabalde-staging
+                    heroku container:release web --app alphabalde-staging
+                '''
             }
         }
+    }
+}
 
         /* ===========================
            PRODUCTION – HEROKU (FIX FINAL)
