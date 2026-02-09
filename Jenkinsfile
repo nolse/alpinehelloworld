@@ -37,9 +37,9 @@ pipeline {
            agent any
            steps {
               script {
-                sh '''
-                    curl http://172.17.0.1:${PORT_EXPOSED} | grep -qi "Hello world New!"', returnStatus: true)
-                '''
+                sh """
+                    curl http://172.17.0.1:${PORT_EXPOSED} | grep -qi "Hello world New!"
+                """
               }
            }
       }
