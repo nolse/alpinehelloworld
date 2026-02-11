@@ -71,7 +71,6 @@ pipeline {
                 }
             }
         }
-        
         stage('Push image in staging and deploy it') { 
             agent { 
                 docker { 
