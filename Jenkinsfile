@@ -76,7 +76,7 @@ pipeline {
             steps {
                 withCredentials([string(credentialsId: 'heroku_api_key', variable: 'HEROKU_API_KEY')]) {
                     script {
-                        docker.image('heroku/cli').inside('-v /var/run/docker.sock:/var/run/docker.sock') { 
+                        docker.image('heroku/heroku:22').inside('-v /var/run/docker.sock:/var/run/docker.sock') { 
                             sh """ 
                             curl https://cli-assets.heroku.com/install.sh | sh
                             heroku container:login
@@ -97,7 +97,7 @@ pipeline {
             steps {
                 withCredentials([string(credentialsId: 'heroku_api_key', variable: 'HEROKU_API_KEY')]) {
                     script {
-                        docker.image('heroku/cli').inside('-v /var/run/docker.sock:/var/run/docker.sock') {
+                        docker.image('heroku/heroku:22').inside('-v /var/run/docker.sock:/var/run/docker.sock') {
                             sh """
                                 curl https://cli-assets.heroku.com/install.sh | sh
                                 heroku container:login
