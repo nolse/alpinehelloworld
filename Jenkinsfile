@@ -71,24 +71,24 @@ pipeline {
             }
         }
 
-        stage('Push image in staging and deploy it') {
-            agent any
-            steps {
-                withCredentials([string(credentialsId: 'heroku_api_key', variable: 'HEROKU_API_KEY')]) {
-                    script {
-                        docker.image('heroku/heroku:22').inside('-v /var/run/docker.sock:/var/run/docker.sock') { 
-                            sh """ 
-                            curl https://cli-assets.heroku.com/install.sh | sh
-                            heroku container:login
-                            heroku container:push web --app $STAGING
-                            heroku container:release web --app $STAGING
-                            """ 
-                        }
-                    }
+stage('Push image in staging and deploy it') {
+    agent any
+    steps {
+        withCredentials([string(credentialsId: 'heroku_api_key', variable: 'HEROKU_API_KEY')]) {
+            script {
+                docker.image('heroku/heroku:22').inside('-v /var/run/docker.sock:/var/run/docker.sock') {
+                    sh """
+                        curl https://cli-assets.heroku.com/install.sh | sh
+                        export HEROKU_API_KEY=$HEROKU_API_KEY
+                        heroku container:login
+                        heroku container:push web --app $STAGING
+                        heroku container:release web --app $STAGING
+                    """
                 }
             }
         }
-
+    }
+}
         stage('Push image in production and deploy it') {
             when {
                 expression { env.GIT_BRANCH == 'origin/production' }
@@ -100,6 +100,7 @@ pipeline {
                         docker.image('heroku/heroku:22').inside('-v /var/run/docker.sock:/var/run/docker.sock') {
                             sh """
                                 curl https://cli-assets.heroku.com/install.sh | sh
+                                export HEROKU_API_KEY=$HEROKU_API_KEY
                                 heroku container:login
                                 heroku container:push web --app $PRODUCTION
                                 heroku container:release web --app $PRODUCTION
