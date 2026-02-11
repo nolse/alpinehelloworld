@@ -77,7 +77,6 @@ pipeline {
             steps { 
                 withCredentials([string(credentialsId: 'heroku_api_key', variable: 'HEROKU_API_KEY')]) { 
                     sh """ 
-                        curl https://cli-assets.heroku.com/install.sh | sh 
                         export HEROKU_API_KEY=$HEROKU_API_KEY 
                         heroku container:login 
                         heroku container:push web --app $STAGING 
@@ -95,7 +94,6 @@ pipeline {
             steps {
                 withCredentials([string(credentialsId: 'heroku_api_key', variable: 'HEROKU_API_KEY')]) {
                     sh """
-                        curl https://cli-assets.heroku.com/install.sh | sh
                         export HEROKU_API_KEY=$HEROKU_API_KEY
                         heroku container:login
                         heroku container:push web --app $PRODUCTION
