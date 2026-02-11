@@ -11,6 +11,7 @@ pipeline {
     agent none
 
     stages {
+
         stage('Build image') {
             agent any
             steps {
@@ -71,30 +72,25 @@ pipeline {
             }
         }
 
-stage('Push image in staging and deploy it') {
-    agent any
-    steps {
-        withCredentials([string(credentialsId: 'heroku_api_key', variable: 'HEROKU_API_KEY')]) {
-            script {
-stage('Push image in staging and deploy it') {
-    agent any
-    steps {
-        withCredentials([string(credentialsId: 'heroku_api_key', variable: 'HEROKU_API_KEY')]) {
-            script {
-                docker.image('docker:24.0.5-dind').inside('-v /var/run/docker.sock:/var/run/docker.sock') {
-                    sh """
-                        apt-get update && apt-get install -y curl xz-utils
-                        curl https://cli-assets.heroku.com/install.sh | sh
-                        export HEROKU_API_KEY=$HEROKU_API_KEY
-                        heroku container:login
-                        heroku container:push web --app $STAGING
-                        heroku container:release web --app $STAGING
-                    """
+        stage('Push image in staging and deploy it') {
+            agent any
+            steps {
+                withCredentials([string(credentialsId: 'heroku_api_key', variable: 'HEROKU_API_KEY')]) {
+                    script {
+                        docker.image('docker:24.0.5-dind').inside('-v /var/run/docker.sock:/var/run/docker.sock') {
+                            sh """
+                                apt-get update && apt-get install -y curl xz-utils
+                                curl https://cli-assets.heroku.com/install.sh | sh
+                                export HEROKU_API_KEY=$HEROKU_API_KEY
+                                heroku container:login
+                                heroku container:push web --app $STAGING
+                                heroku container:release web --app $STAGING
+                            """
+                        }
+                    }
                 }
             }
         }
-    }
-}
 
         stage('Push image in production and deploy it') {
             when {
@@ -107,7 +103,7 @@ stage('Push image in staging and deploy it') {
                         docker.image('docker:24.0.5-dind').inside('-v /var/run/docker.sock:/var/run/docker.sock') {
                             sh """
                                 apt-get update && apt-get install -y curl xz-utils
-                                apk add --no-cache curl curl https://cli-assets.heroku.com/install.sh | sh
+                                curl https://cli-assets.heroku.com/install.sh | sh
                                 export HEROKU_API_KEY=$HEROKU_API_KEY
                                 heroku container:login
                                 heroku container:push web --app $PRODUCTION
