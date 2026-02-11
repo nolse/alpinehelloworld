@@ -77,7 +77,7 @@ pipeline {
             steps {
                 withCredentials([string(credentialsId: 'heroku_api_key', variable: 'HEROKU_API_KEY')]) {
                     script {
-                        docker.image('docker:24.0.5-dind').inside('-v /var/run/docker.sock:/var/run/docker.sock') {
+                        docker.image('debian:stable').inside('-v /var/run/docker.sock:/var/run/docker.sock') {
                             sh """
                                 apt-get update && apt-get install -y curl xz-utils
                                 curl https://cli-assets.heroku.com/install.sh | sh
@@ -100,7 +100,7 @@ pipeline {
             steps {
                 withCredentials([string(credentialsId: 'heroku_api_key', variable: 'HEROKU_API_KEY')]) {
                     script {
-                        docker.image('docker:24.0.5-dind').inside('-v /var/run/docker.sock:/var/run/docker.sock') {
+                        docker.image('debian:stable').inside('-v /var/run/docker.sock:/var/run/docker.sock') {
                             sh """
                                 apt-get update && apt-get install -y curl xz-utils
                                 curl https://cli-assets.heroku.com/install.sh | sh
