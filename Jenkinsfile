@@ -105,5 +105,5 @@ pipeline {
             }
         }
 
-    } // ← FIN DU BLOC stages
-} // ← FIN DU pipeline
+    }
+}
