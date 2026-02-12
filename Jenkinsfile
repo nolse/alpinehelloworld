@@ -106,22 +106,38 @@ stage('Push image in staging and deploy it') {
     }
   }
 }
-        stage('Push image in production and deploy it') {
-            when {
-                expression { env.GIT_BRANCH == 'origin/production' }
-            }
-            agent any
-            steps {
-                withCredentials([string(credentialsId: 'heroku_api_key', variable: 'HEROKU_API_KEY')]) {
-                    sh """
-                        export HEROKU_API_KEY=$HEROKU_API_KEY
-                        heroku container:login
-                        heroku container:push web --app $PRODUCTION
-                        heroku container:release web --app $PRODUCTION
-                    """
-                }
-            }
-        }
+stage('Push image in production and deploy it') {
+  when {
+    expression { env.GIT_BRANCH == 'origin/production' }
+  }
+  agent any
+  environment {
+    HEROKU_API_KEY = credentials('heroku_api_key')
+  }
+  steps {
+    script {
+      sh '''
+        echo "=== Installation du Heroku CLI standalone ==="
+        curl https://cli-assets.heroku.com/heroku-linux-x64.tar.gz -o heroku.tar.gz
+        tar -xzf heroku.tar.gz
+        mv heroku /usr/local/heroku
+        export PATH="/usr/local/heroku/bin:$PATH"
 
+        echo "Heroku version:"
+        heroku --version
+
+        echo "=== Connexion Heroku ==="
+        heroku container:login
+
+        echo "=== Création de l'app production si nécessaire ==="
+        heroku create $PRODUCTION || echo "project already exist"
+
+        echo "=== Push de l'image Docker ==="
+        heroku container:push -a $PRODUCTION web
+
+        echo "=== Release de l'image ==="
+        heroku container:release -a $PRODUCTION web
+      '''
     }
+  }
 }
