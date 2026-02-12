@@ -138,6 +138,8 @@ stage('Push image in production and deploy it') {
         echo "=== Release de l'image ==="
         heroku container:release -a $PRODUCTION web
       '''
-    }
+      }
+     }
   }
 }
+        
