@@ -1,18 +1,10 @@
-
 FROM jenkins/jenkins:lts
 
 USER root
 
-# Installer dépendances nécessaires
 RUN apt-get update && \
-    apt-get install -y curl apt-transport-https gnupg software-properties-common && \
-    rm -rf /var/lib/apt/lists/*
+    apt-get install -y curl apt-transport-https gnupg && \
+    curl https://cli-assets.heroku.com/install-ubuntu.sh | sh && \
+    apt-get clean
 
-# Installer le Heroku CLI (méthode officielle Ubuntu/Debian)
-RUN curl https://cli-assets.heroku.com/install-ubuntu.sh | sh
-
-# Vérification (optionnel mais utile)
-RUN heroku --version
-
-# Revenir à l'utilisateur Jenkins
 USER jenkins
