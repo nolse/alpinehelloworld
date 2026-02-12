@@ -71,27 +71,39 @@ pipeline {
                 }
             }
         }
-     stage('Push image in staging and deploy it') {
-       when {
-              expression { GIT_BRANCH == 'origin/master' }
-            }
-      agent any
-      environment {
-          HEROKU_API_KEY = credentials('heroku_api_key')
-      }  
-      steps {
-          script {
-            sh '''
-              npm i -g heroku@7.68.0
-              heroku container:login
-              heroku create $STAGING || echo "project already exist"
-              heroku container:push -a $STAGING web
-              heroku container:release -a $STAGING web
-            '''
-          }
-        }
-     }
+stage('Push image in staging and deploy it') {
+  when {
+    expression { GIT_BRANCH == 'origin/master' }
+  }
+  agent any
+  environment {
+    HEROKU_API_KEY = credentials('heroku_api_key')
+  }
+  steps {
+    script {
+      sh '''
+        echo "=== Installation de Node 18 ==="
+        curl -fsSL https://deb.nodesource.com/setup_18.x | bash -
+        apt-get install -y nodejs
 
+        echo "=== Installation du Heroku CLI ==="
+        npm install -g heroku@7.68.0
+
+        echo "=== Connexion Heroku ==="
+        heroku container:login
+
+        echo "=== Création de l'app staging si nécessaire ==="
+        heroku create $STAGING || echo "project already exist"
+
+        echo "=== Push de l'image Docker ==="
+        heroku container:push -a $STAGING web
+
+        echo "=== Release de l'image ==="
+        heroku container:release -a $STAGING web
+      '''
+    }
+  }
+}
         stage('Push image in production and deploy it') {
             when {
                 expression { env.GIT_BRANCH == 'origin/production' }
