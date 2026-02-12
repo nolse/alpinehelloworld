@@ -82,18 +82,14 @@ stage('Push image in staging and deploy it') {
   steps {
     script {
       sh '''
-        echo "=== Installation de Node 18 (universelle) ==="
-        curl -fsSL https://nodejs.org/dist/v18.19.1/node-v18.19.1-linux-x64.tar.xz -o node.tar.xz
-        tar -xf node.tar.xz
-        mv node-v18.19.1-linux-x64 /usr/local/node18
-        export PATH="/usr/local/node18/bin:$PATH"
+        echo "=== Installation du Heroku CLI standalone ==="
+        curl https://cli-assets.heroku.com/heroku-linux-x64.tar.gz -o heroku.tar.gz
+        tar -xzf heroku.tar.gz
+        mv heroku /usr/local/heroku
+        export PATH="/usr/local/heroku/bin:$PATH"
 
-        echo "Node version:"
-        node -v
-        npm -v
-
-        echo "=== Installation du Heroku CLI ==="
-        npm install -g heroku@7.68.0
+        echo "Heroku version:"
+        heroku --version
 
         echo "=== Connexion Heroku ==="
         heroku container:login
