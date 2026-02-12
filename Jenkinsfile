@@ -128,6 +128,7 @@ pipeline {
                         echo "=== Installation du Heroku CLI standalone ==="
                         curl https://cli-assets.heroku.com/heroku-linux-x64.tar.gz -o heroku.tar.gz
                         tar -xzf heroku.tar.gz
+                        rm -rf /usr/local/heroku
                         mv heroku /usr/local/heroku
                         export PATH="/usr/local/heroku/bin:$PATH"
 
@@ -168,6 +169,7 @@ pipeline {
                         echo "=== Installation du Heroku CLI standalone ==="
                         curl https://cli-assets.heroku.com/heroku-linux-x64.tar.gz -o heroku.tar.gz
                         tar -xzf heroku.tar.gz
+                        rm -rf /usr/local/heroku
                         mv heroku /usr/local/heroku
                         export PATH="/usr/local/heroku/bin:$PATH"
 
