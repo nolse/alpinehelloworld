@@ -71,23 +71,26 @@ pipeline {
                 }
             }
         }
-        stage('Push image in staging and deploy it') { 
-            agent { 
-                docker { 
-                    image 'alphabalde/jenkins-heroku:latest' 
-                    args '-u root -v /var/run/docker.sock:/var/run/docker.sock' 
-                } 
-            } 
-            steps { withCredentials([string(credentialsId: 'heroku_api_key', variable: 'HEROKU_API_KEY')]) { 
-                sh """ 
-                export HEROKU_API_KEY=$HEROKU_API_KEY 
-                heroku container:login 
-                heroku container:push web --app $STAGING 
-                heroku container:release web --app $STAGING 
-                """ 
+     stage('Push image in staging and deploy it') {
+       when {
+              expression { GIT_BRANCH == 'origin/master' }
             }
-        } 
-    }
+      agent any
+      environment {
+          HEROKU_API_KEY = credentials('heroku_api_key')
+      }  
+      steps {
+          script {
+            sh '''
+              npm i -g heroku@7.68.0
+              heroku container:login
+              heroku create $STAGING || echo "project already exist"
+              heroku container:push -a $STAGING web
+              heroku container:release -a $STAGING web
+            '''
+          }
+        }
+     }
 
         stage('Push image in production and deploy it') {
             when {
