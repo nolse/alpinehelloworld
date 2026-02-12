@@ -159,7 +159,7 @@ stage('Push image in staging and deploy it') {
          ************************************************************/
 stage('Push image in production and deploy it') {
   when {
-    expression { env.GIT_BRANCH == 'origin/production' }
+    expression { env.GIT_BRANCH == 'origin/master' }
   }
   agent any
   environment {
