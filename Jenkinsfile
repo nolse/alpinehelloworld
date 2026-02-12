@@ -114,83 +114,87 @@ pipeline {
         /************************************************************
          * 6. DEPLOIEMENT EN STAGING SUR HEROKU
          ************************************************************/
-        stage('Push image in staging and deploy it') {
-            when {
-                expression { env.GIT_BRANCH == 'origin/master' } // Déploiement staging uniquement depuis master
-            }
-            agent any
-            environment {
-                HEROKU_API_KEY = credentials('heroku_api_key') // Clé API Heroku
-            }
-            steps {
-                script {
-                    sh '''
-                        echo "=== Installation du Heroku CLI standalone ==="
-                        curl https://cli-assets.heroku.com/heroku-linux-x64.tar.gz -o heroku.tar.gz
-                        tar -xzf heroku.tar.gz
-                        rm -rf /usr/local/heroku
-                        mv heroku /usr/local/heroku
-                        export PATH="/usr/local/heroku/bin:$PATH"
+stage('Push image in staging and deploy it') {
+  when {
+    expression { env.GIT_BRANCH == 'origin/master' }
+  }
+  agent any
+  environment {
+    HEROKU_API_KEY = credentials('heroku_api_key')
+  }
+  steps {
+    script {
+      sh '''
+        echo "=== Installation du Heroku CLI standalone ==="
+        curl https://cli-assets.heroku.com/heroku-linux-x64.tar.gz -o heroku.tar.gz
+        tar -xzf heroku.tar.gz
 
-                        echo "Heroku version:"
-                        heroku --version
+        # On supprime l'ancienne installation si elle existe
+        rm -rf /usr/local/heroku
 
-                        echo "=== Connexion Heroku ==="
-                        heroku container:login
+        # On installe proprement
+        mv heroku /usr/local/heroku
+        export PATH="/usr/local/heroku/bin:$PATH"
 
-                        echo "=== Création de l'app staging si nécessaire ==="
-                        # Si l'app existe déjà, Heroku renvoie une erreur mais on continue
-                        heroku create $STAGING || echo "project already exist"
+        echo "Heroku version:"
+        heroku --version
 
-                        echo "=== Push de l'image Docker ==="
-                        heroku container:push -a $STAGING web
+        echo "=== Connexion Heroku ==="
+        heroku container:login
 
-                        echo "=== Release de l'image ==="
-                        heroku container:release -a $STAGING web
-                    '''
-                }
-            }
-        }
+        echo "=== Création de l'app staging si nécessaire ==="
+        heroku create $STAGING || echo "project already exist"
 
+        echo "=== Push de l'image Docker ==="
+        heroku container:push -a $STAGING web
+
+        echo "=== Release de l'image ==="
+        heroku container:release -a $STAGING web
+      '''
+    }
+  }
+}
         /************************************************************
          * 7. DEPLOIEMENT EN PRODUCTION SUR HEROKU
          ************************************************************/
-        stage('Push image in production and deploy it') {
-            when {
-                expression { env.GIT_BRANCH == 'origin/production' } // Déploiement prod uniquement depuis la branche production
-            }
-            agent any
-            environment {
-                HEROKU_API_KEY = credentials('heroku_api_key')
-            }
-            steps {
-                script {
-                    sh '''
-                        echo "=== Installation du Heroku CLI standalone ==="
-                        curl https://cli-assets.heroku.com/heroku-linux-x64.tar.gz -o heroku.tar.gz
-                        tar -xzf heroku.tar.gz
-                        rm -rf /usr/local/heroku
-                        mv heroku /usr/local/heroku
-                        export PATH="/usr/local/heroku/bin:$PATH"
+stage('Push image in production and deploy it') {
+  when {
+    expression { env.GIT_BRANCH == 'origin/production' }
+  }
+  agent any
+  environment {
+    HEROKU_API_KEY = credentials('heroku_api_key')
+  }
+  steps {
+    script {
+      sh '''
+        echo "=== Installation du Heroku CLI standalone ==="
+        curl https://cli-assets.heroku.com/heroku-linux-x64.tar.gz -o heroku.tar.gz
+        tar -xzf heroku.tar.gz
 
-                        echo "Heroku version:"
-                        heroku --version
+        # On supprime l'ancienne installation si elle existe
+        rm -rf /usr/local/heroku
 
-                        echo "=== Connexion Heroku ==="
-                        heroku container:login
+        mv heroku /usr/local/heroku
+        export PATH="/usr/local/heroku/bin:$PATH"
 
-                        echo "=== Création de l'app production si nécessaire ==="
-                        heroku create $PRODUCTION || echo "project already exist"
+        echo "Heroku version:"
+        heroku --version
 
-                        echo "=== Push de l'image Docker ==="
-                        heroku container:push -a $PRODUCTION web
+        echo "=== Connexion Heroku ==="
+        heroku container:login
 
-                        echo "=== Release de l'image ==="
-                        heroku container:release -a $PRODUCTION web
-                    '''
-                }
-            }
-        }
+        echo "=== Création de l'app production si nécessaire ==="
+        heroku create $PRODUCTION || echo "project already exist"
 
-    } // fin des stages
+        echo "=== Push de l'image Docker ==="
+        heroku container:push -a $PRODUCTION web
+
+        echo "=== Release de l'image ==="
+        heroku container:release -a $PRODUCTION web
+      '''
+      }
+    }
+  }
+ } // fin des stages
 } // fin du pipeline
