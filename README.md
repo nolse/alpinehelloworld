@@ -1,1 +1,1 @@
-[![Build Status](https://ip10-0-1-4-d68pfpe57ed000blmpf0-8080.direct.docker.labs.eazytraining.fr/buildStatus/icon?job=alpinehelloworld)](https://ip10-0-1-4-d68pfpe57ed000blmpf0-8080.direct.docker.labs.eazytraining.fr/job/alpinehelloworld/)
+[![Build Status](https://jenkins.example.com/job/alpinehelloworld/job/master/badge/icon)](https://jenkins.example.com/job/alpinehelloworld/job/master/)
